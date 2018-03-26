@@ -14,6 +14,16 @@ fn run(code: Vec<AST>) {
     run_code(code, &mut mem, &mut ptr);
 }
 
+fn getchar() -> u8 {
+    let mut buffer = [0; 1];
+    std::io::stdin().read(&mut buffer[..]).unwrap();
+    buffer[0]
+}
+
+fn putchar(x: u8) {
+    std::io::stdout().write(&[x]).unwrap();
+}
+
 fn run_code(code: Vec<AST>, mem: &mut [u8; 20000], ptr: &mut usize) {
     for x in code {
         match x {
@@ -30,12 +40,10 @@ fn run_code(code: Vec<AST>, mem: &mut [u8; 20000], ptr: &mut usize) {
                 mem[*ptr] -= 1;
             }
             AST::Out => {
-                print!("{}", char::from(mem[*ptr]));
+                putchar(mem[*ptr]);
             }
             AST::In => {
-                let mut buffer = [0; 1];
-                std::io::stdin().read(&mut buffer[..]).unwrap();
-                mem[*ptr] = buffer[0];
+                mem[*ptr] = getchar();
             }
             AST::Loop(v) => while mem[*ptr] != 0 {
                 run_code(v.clone(), mem, ptr);
