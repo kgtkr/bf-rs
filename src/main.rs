@@ -1,10 +1,15 @@
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
+mod ast;
+mod parser;
+use ast::AST;
 
 fn main() {
-    run(to_ast(&mut to_token(
+    run(parser::Parser::new(
         "+++++++++[>++++++++>+++++++++++>+++++<<<-]>.>++.+++++++..+
-++.>-.------------.<++++++++.--------.+++.------.--------.>+.",
-    ).into_iter()));
+++.>-.------------.<++++++++.--------.+++.------.--------.>+."
+            .to_string(),
+    ).parse()
+        .unwrap());
 }
 
 fn run(code: Vec<AST>) {
@@ -50,63 +55,4 @@ fn run_code(code: Vec<AST>, mem: &mut [u8; 20000], ptr: &mut usize) {
             },
         }
     }
-}
-
-fn to_token(s: &str) -> Vec<Token> {
-    s.chars()
-        .filter_map(|x| match x {
-            '>' => Some(Token::PtrInc),
-            '<' => Some(Token::PtrDec),
-            '+' => Some(Token::ValInc),
-            '-' => Some(Token::ValDec),
-            '.' => Some(Token::Out),
-            ',' => Some(Token::In),
-            '[' => Some(Token::LoopBegin),
-            ']' => Some(Token::LoopEnd),
-            _ => None,
-        })
-        .collect()
-}
-
-fn to_ast<T: Iterator<Item = Token>>(ts: &mut T) -> Vec<AST> {
-    let mut r = Vec::new();
-    while let Some(t) = ts.next() {
-        let v = match t {
-            Token::PtrInc => AST::PtrInc,
-            Token::PtrDec => AST::PtrDec,
-            Token::ValInc => AST::ValInc,
-            Token::ValDec => AST::ValDec,
-            Token::Out => AST::Out,
-            Token::In => AST::In,
-            Token::LoopBegin => AST::Loop(to_ast(ts)),
-            Token::LoopEnd => {
-                return r;
-            }
-        };
-        r.push(v);
-    }
-    r
-}
-
-#[derive(PartialEq, Debug, Clone)]
-enum Token {
-    PtrInc,
-    PtrDec,
-    ValInc,
-    ValDec,
-    Out,
-    In,
-    LoopBegin,
-    LoopEnd,
-}
-
-#[derive(PartialEq, Debug, Clone)]
-enum AST {
-    PtrInc,
-    PtrDec,
-    ValInc,
-    ValDec,
-    Out,
-    In,
-    Loop(Vec<AST>),
 }
