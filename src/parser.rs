@@ -23,6 +23,14 @@ impl Parser {
     val
   }
 
+  fn eof(&self) -> Option<()> {
+    if self.s.len() == self.pos {
+      Some(())
+    } else {
+      None
+    }
+  }
+
   fn char(&mut self, c: char) -> Option<char> {
     self.expect(|x| x == c)
   }
@@ -40,7 +48,7 @@ impl Parser {
     }
   }
 
-  pub fn parse(&mut self) -> Option<Vec<AST>> {
+  fn ast(&mut self) -> Option<Vec<AST>> {
     let mut res = Vec::new();
     while let Some(c) = self.peek() {
       match c {
@@ -70,7 +78,7 @@ impl Parser {
         }
         '[' => {
           self.next();
-          res.push(AST::Loop(self.parse()?));
+          res.push(AST::Loop(self.ast()?));
           self.char(']')?;
         }
         ']' => break,
@@ -80,5 +88,11 @@ impl Parser {
       }
     }
     Some(res)
+  }
+
+  pub fn parse(&mut self) -> Option<Vec<AST>> {
+    let ast = self.ast()?;
+    self.eof()?;
+    Some(ast)
   }
 }
